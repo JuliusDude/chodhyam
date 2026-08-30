@@ -1,0 +1,7 @@
+# Documentation
+docs/
+
+# Agent configuration and skills
+.agents/
+skills/
+skills-lock.json
