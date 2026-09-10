@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-black">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Workspace — Chodhyam AI Document Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14B8A6',
+            secondary: '#000000',
+            tertiary: '#0F5AC8',
+            surface: '#0F0F11',
+            'surface-raised': '#18181B',
+            'surface-border': 'rgba(255, 255, 255, 0.08)',
+            'text-primary': '#F1F5F9',
+            'text-secondary': '#94A3B8',
+          },
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- PDF.js for Client-Side PDF Parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  </script>
+
+  <!-- GSAP for UI Transitions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <link rel="stylesheet" href="workspace.css">
+</head>
+<body class="h-full flex flex-col bg-black text-slate-100 antialiased overflow-hidden select-none">
+
+  <!-- Top Navigation / Telemetry Bar -->
+  <header class="h-14 border-b border-white/10 bg-[#09090b] flex items-center justify-between px-4 sm:px-5 z-30 shrink-0" role="banner">
+    <div class="flex items-center gap-3 sm:gap-4">
+      <a href="index.html" class="flex items-center gap-2 text-white font-semibold hover:text-[#14B8A6] focus-visible:ring-2 focus-visible:ring-[#14B8A6] rounded-md transition-colors group" aria-label="Return to Chodhyam Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-[#14B8A6] group-hover:-translate-x-0.5 transition-transform" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        <span class="tracking-tight text-lg">Chodhyam</span>
+      </a>
+      <span class="h-4 w-px bg-white/15 hidden sm:inline-block" aria-hidden="true"></span>
+      <div class="flex items-center gap-2">
+        <span id="session-tag" class="text-xs font-mono text-gray-400" aria-label="Session identifier">ID: e-9842</span>
+      </div>
+    </div>
+
+    <!-- Center Session Status -->
+    <div class="hidden md:flex items-center gap-6 text-xs font-mono text-gray-400" role="region" aria-label="Session Telemetry">
+      <div class="flex items-center gap-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Zero Storage • In-Memory Only</span>
+      </div>
+      <div class="flex items-center gap-1.5 text-gray-300">
+        <span class="text-gray-400">TTL:</span>
+        <span id="session-timer" class="text-teal-400 font-semibold" role="timer" aria-live="off" aria-label="Session time remaining">45:00</span>
+      </div>
+    </div>
+
+    <!-- Right Controls -->
+    <div class="flex items-center gap-2 sm:gap-3" role="toolbar" aria-label="Workspace Actions">
+      <!-- Mobile Documents Drawer Toggle -->
+      <button id="btn-toggle-sandbox" class="lg:hidden btn-secondary text-xs px-3 py-1.5" title="Open Documents" aria-label="Toggle Documents Drawer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Docs</span>
+      </button>
+
+      <button id="btn-load-samples" class="hidden sm:inline-flex btn-secondary text-xs px-3 py-1.5" title="Load demo documents to test instantly" aria-label="Load demo documents to test immediately">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        <span>Sample Docs</span>
+      </button>
+
+      <button id="btn-toggle-inspector" class="btn-secondary text-xs px-3 py-1.5" title="Toggle Document & Citation Inspector" aria-label="Toggle Document & Citation Inspector panel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+        <span class="hidden sm:inline">Inspector</span>
+      </button>
+
+      <button id="btn-purge-session" class="btn-danger text-xs px-3 py-1.5" title="Purge all documents, vectors, and session history" aria-label="End session and purge workspace data">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span class="hidden sm:inline">End & Purge</span>
+        <span class="sm:hidden">Purge</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer Backdrop Overlay -->
+  <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-200 lg:hidden" aria-hidden="true"></div>
+
+  <!-- Workspace App Body (3-Column Layout with Responsive Drawer Modes) -->
+  <div class="flex-1 flex overflow-hidden relative">
+
+    <!-- LEFT PANEL: Documents & Vector Engine -->
+    <aside id="left-sidebar" class="drawer-panel fixed lg:static inset-y-0 left-0 w-80 md:w-88 lg:w-96 border-r border-white/10 bg-[#09090b] flex flex-col shrink-0 z-40 transition-transform duration-300 -translate-x-full lg:translate-x-0" aria-label="Documents">
+      
+      <!-- Panel Header -->
+      <div class="p-4 border-b border-white/10 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full bg-[#14B8A6]" aria-hidden="true"></div>
+          <h2 class="text-sm font-semibold text-white tracking-tight">Documents</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="doc-counter-badge" class="px-2 py-0.5 rounded text-xs font-mono bg-white/5 border border-white/10 text-gray-300" aria-live="polite">0 Files</span>
+          <button id="btn-close-sandbox-drawer" class="lg:hidden text-gray-400 hover:text-white p-1 rounded hover:bg-white/10" aria-label="Close documents drawer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dropzone Section -->
+      <div class="p-4 border-b border-white/10">
+        <div id="dropzone" class="dropzone rounded-xl p-5 flex flex-col items-center justify-center text-center cursor-pointer bg-white/[0.02] hover:bg-white/[0.04]" tabindex="0" role="button" aria-label="Upload document files: Drop files here or press Enter to browse" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();document.getElementById('file-input').click();}">
+          <input type="file" id="file-input" multiple accept=".pdf,.txt,.md,.json,.csv" class="hidden" aria-label="Upload documents (PDF, TXT, MD, JSON, CSV)">
+          
+          <div class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3 text-[#14B8A6]" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <p class="text-xs font-semibold text-white mb-1">Drop documents here</p>
+          <p class="text-xs text-gray-400 mb-3">PDF, Markdown, TXT, CSV, JSON</p>
+          
+          <button type="button" onclick="document.getElementById('file-input').click()" class="px-3 py-1.5 text-xs font-medium text-white bg-white/10 hover:bg-white/20 rounded-md border border-white/10 transition-colors" aria-label="Browse files from device">
+            Browse Files
+          </button>
+        </div>
+
+        <!-- Extraction Progress Indicator -->
+        <div id="indexing-progress-container" class="hidden mt-3 p-3 rounded-lg bg-white/5 border border-white/10" aria-live="polite" role="status">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span id="indexing-status-text" class="text-teal-400 font-mono text-xs flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-400 animate-ping" aria-hidden="true"></span>
+              Extracting text & vector chunks...
+            </span>
+            <span id="indexing-percent-text" class="text-gray-400 font-mono text-xs">0%</span>
+          </div>
+          <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="indexing-progress-bar" class="h-full bg-[#14B8A6] w-0 transition-all duration-150"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loaded Documents List -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-2.5" id="docs-list" role="region" aria-label="Loaded document list">
+        <!-- Empty State -->
+        <div id="docs-empty-state" class="py-8 px-4 text-center">
+          <div class="w-12 h-12 rounded-xl bg-white/[0.03] border border-white/10 flex items-center justify-center mx-auto mb-3 text-gray-500" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <p class="text-xs font-medium text-gray-300 mb-1">No documents in memory</p>
+          <p class="text-xs text-gray-400 leading-relaxed mb-4">
+            Upload files or click below to inject demo research papers for immediate testing.
+          </p>
+          <button id="btn-quick-sample" class="px-3 py-2 text-xs font-medium text-[#14B8A6] bg-[#14B8A6]/10 hover:bg-[#14B8A6]/20 border border-[#14B8A6]/30 rounded-lg transition-colors inline-flex items-center gap-1.5" aria-label="Inject demo documents">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            Inject Demo Documents
+          </button>
+        </div>
+      </div>
+
+      <!-- Memory Telemetry Footer -->
+      <div class="p-3.5 border-t border-white/10 bg-black/60 text-xs font-mono text-gray-400 flex flex-col gap-1.5" role="contentinfo" aria-label="Memory diagnostics">
+        <div class="flex items-center justify-between">
+          <span class="text-gray-400">Vector Index:</span>
+          <span id="vector-count-stat" class="text-teal-400 font-semibold" aria-live="polite">0 chunks</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-gray-400">Memory Usage:</span>
+          <span id="memory-size-stat" class="text-gray-300" aria-live="polite">0 KB (Ephemeral)</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER PANEL: Conversational RAG Studio -->
+    <main class="flex-1 flex flex-col min-w-0 bg-[#000000] relative" role="main" aria-label="RAG Conversation Area">
+      
+      <!-- Chat Header -->
+      <div class="h-12 border-b border-white/10 px-4 sm:px-6 flex items-center justify-between bg-black/40 backdrop-blur-md z-10">
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2 text-xs font-mono text-gray-400">
+            <span class="text-gray-400">CONTEXT:</span>
+            <span id="active-doc-filter-label" class="text-teal-400 font-medium truncate max-w-[200px] sm:max-w-none">All Uploaded Documents</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="btn-export-chat" class="text-xs text-gray-400 hover:text-white px-2.5 py-1.5 rounded hover:bg-white/5 transition-colors flex items-center gap-1.5" title="Export session report as Markdown" aria-label="Export conversation and citations as Markdown">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span class="hidden sm:inline">Export Report</span>
+          </button>
+          <button id="btn-clear-chat" class="text-xs text-gray-400 hover:text-white px-2.5 py-1.5 rounded hover:bg-white/5 transition-colors flex items-center gap-1.5" title="Clear conversational history" aria-label="Clear chat conversation history">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span class="hidden sm:inline">Clear Chat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 select-text" role="log" aria-live="polite" aria-label="Chat messages">
+        
+        <!-- Welcome Hero State -->
+        <div id="welcome-chat-view" class="max-w-2xl mx-auto py-8 sm:py-12 text-center flex flex-col items-center">
+          <div class="w-14 h-14 rounded-2xl bg-white/[0.03] border border-[#14B8A6]/30 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(20,184,166,0.15)] text-[#14B8A6]" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+
+          <h1 class="text-2xl md:text-3xl font-light text-white mb-3 tracking-tight">
+            Ask anything across your workspace
+          </h1>
+          <p class="text-xs md:text-sm text-gray-400 max-w-lg mb-8 leading-relaxed">
+            Every response is synthesised by the in-memory SLM RAG engine, grounded strictly within your uploaded files and backed by verifiable citations.
+          </p>
+
+          <!-- Prompt Suggestion Chips -->
+          <div class="w-full grid grid-cols-1 sm:grid-cols-2 gap-3 text-left">
+            <button class="prompt-chip p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#14B8A6]/50 hover:bg-white/[0.06] transition-all group" data-prompt="Summarize the core technical findings and conclusions from all documents." aria-label="Suggestion: Executive Summary of technical findings">
+              <div class="text-xs font-semibold text-white group-hover:text-[#14B8A6] transition-colors mb-1">Executive Summary</div>
+              <div class="text-xs text-gray-400 line-clamp-2">Summarize the core technical findings and conclusions from all documents.</div>
+            </button>
+
+            <button class="prompt-chip p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#14B8A6]/50 hover:bg-white/[0.06] transition-all group" data-prompt="What are the specific security, privacy, and zero-retention protocols described?" aria-label="Suggestion: Security and privacy protocol analysis">
+              <div class="text-xs font-semibold text-white group-hover:text-[#14B8A6] transition-colors mb-1">Security & Privacy Protocol</div>
+              <div class="text-xs text-gray-400 line-clamp-2">What are the specific security, privacy, and zero-retention protocols described?</div>
+            </button>
+
+            <button class="prompt-chip p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#14B8A6]/50 hover:bg-white/[0.06] transition-all group" data-prompt="Extract a structured comparison of performance metrics and latency benchmarks." aria-label="Suggestion: Extract performance metrics and benchmarks">
+              <div class="text-xs font-semibold text-white group-hover:text-[#14B8A6] transition-colors mb-1">Metrics & Benchmarks</div>
+              <div class="text-xs text-gray-400 line-clamp-2">Extract a structured comparison of performance metrics and latency benchmarks.</div>
+            </button>
+
+            <button class="prompt-chip p-3.5 rounded-xl bg-white/[0.03] border border-white/10 hover:border-[#14B8A6]/50 hover:bg-white/[0.06] transition-all group" data-prompt="What are the limitations, trade-offs, and open challenges mentioned?" aria-label="Suggestion: List constraints and trade-offs">
+              <div class="text-xs font-semibold text-white group-hover:text-[#14B8A6] transition-colors mb-1">Constraints & Trade-offs</div>
+              <div class="text-xs text-gray-400 line-clamp-2">What are the limitations, trade-offs, and open challenges mentioned?</div>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Input Area Section -->
+      <div class="p-3 sm:p-6 border-t border-white/10 bg-[#09090b] relative z-20">
+        <form id="chat-form" class="max-w-4xl mx-auto flex flex-col gap-2">
+          
+          <div class="relative flex items-center rounded-xl bg-white/[0.04] border border-white/10 focus-within:border-[#14B8A6]/60 focus-within:shadow-[0_0_20px_rgba(20,184,166,0.15)] transition-all">
+            <textarea 
+              id="query-input" 
+              name="query"
+              rows="1" 
+              placeholder="Ask a question about your documents (e.g. 'What is the ephemeral retention policy?')..." 
+              aria-label="Ask a question about uploaded documents"
+              class="w-full bg-transparent text-sm text-white placeholder-gray-500 px-3.5 sm:px-4 py-3 sm:py-3.5 focus:outline-none resize-none max-h-32 min-h-[44px] sm:min-h-[48px]"
+            ></textarea>
+
+            <button 
+              type="submit" 
+              id="btn-send-query" 
+              class="mr-2 p-2.5 rounded-lg bg-[#14B8A6] text-black hover:bg-[#2DD4BF] disabled:opacity-30 disabled:cursor-not-allowed transition-all shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+              title="Submit query"
+              aria-label="Submit question to RAG engine"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+
+          <!-- Bottom micro-bar -->
+          <div class="flex items-center justify-between text-xs text-gray-400 font-mono px-1">
+            <div class="flex items-center gap-2">
+              <span>Model: <strong class="text-gray-300 font-normal">Chodhyam-SLM-RAG</strong></span>
+              <span aria-hidden="true" class="hidden sm:inline">•</span>
+              <span class="hidden sm:inline">Retrieval: <strong class="text-teal-400 font-normal">Hybrid BM25 + Vector</strong></span>
+            </div>
+            <div class="hidden md:block text-gray-400">
+              <span>Press <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-gray-300 font-mono text-xs">Enter</kbd> to ask, <kbd class="px-1.5 py-0.5 rounded bg-white/10 text-gray-300 font-mono text-xs">Shift+Enter</kbd> for newline</span>
+            </div>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <!-- RIGHT PANEL: Source & Citation Inspector (Collapsible & Responsive Drawer) -->
+    <aside id="inspector-panel" class="drawer-panel fixed lg:static inset-y-0 right-0 w-80 md:w-96 border-l border-white/10 bg-[#09090b] flex flex-col shrink-0 z-40 transition-transform duration-300 translate-x-full lg:translate-x-0 select-text" aria-label="Source Citation Inspector">
+      
+      <!-- Inspector Header -->
+      <div class="p-4 border-b border-white/10 flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#14B8A6" stroke-width="2" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <h3 class="text-xs font-semibold text-white tracking-tight uppercase font-mono">Source Citation Inspector</h3>
+        </div>
+        <button id="btn-close-inspector" class="text-gray-400 hover:text-white p-1.5 rounded hover:bg-white/10 transition-colors" aria-label="Close citation inspector">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <!-- Active Citation Focused Box -->
+      <div id="inspector-focus-box" class="p-4 border-b border-white/10 bg-white/[0.02]" role="region" aria-label="Active Citation Focus">
+        <div class="text-xs font-mono text-gray-400 mb-2 flex items-center justify-between">
+          <span class="text-teal-400 font-semibold">ACTIVE CITATION</span>
+          <span id="citation-confidence-tag" class="px-2 py-0.5 rounded bg-teal-500/10 text-teal-400 border border-teal-500/20 text-xs">98.2% Grounding Match</span>
+        </div>
+        <div class="text-xs font-medium text-white mb-1" id="citation-source-doc">Select any citation pill [Doc X] to inspect</div>
+        <div class="text-xs text-gray-400 font-mono mb-3" id="citation-source-meta">Document location & chunk index</div>
+        
+        <!-- Highlighted snippet -->
+        <div id="citation-snippet-text" class="text-xs text-gray-300 leading-relaxed font-mono bg-black/60 p-3 rounded-lg border border-white/10 max-h-48 overflow-y-auto" tabindex="0" aria-label="Citation excerpt text">
+          Click any citation pill in the chat responses to immediately highlight and inspect the exact grounded passage and page source here.
+        </div>
+      </div>
+
+      <!-- Chunks & Document Browser Header -->
+      <div class="px-4 py-2.5 border-b border-white/10 bg-black/40 flex items-center justify-between text-xs">
+        <span class="font-mono text-gray-400 text-xs">ALL INDEXED CHUNKS</span>
+        <div class="relative">
+          <input type="text" id="chunk-search-input" placeholder="Filter chunks..." aria-label="Filter indexed document chunks" class="px-2 py-1 text-xs bg-white/5 border border-white/10 rounded focus:outline-none focus:border-teal-500 text-white w-28">
+        </div>
+      </div>
+
+      <!-- Chunks Stream -->
+      <div id="inspector-chunks-list" class="flex-1 overflow-y-auto p-4 space-y-3 font-mono text-xs" role="feed" aria-label="Indexed document chunk feed">
+        <div class="text-gray-400 text-center py-6">No chunks loaded yet</div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <!-- PURGE CONFIRMATION MODAL -->
+  <div id="purge-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden opacity-0" role="dialog" aria-modal="true" aria-labelledby="purge-modal-title" aria-describedby="purge-modal-desc">
+    <div class="max-w-md w-full rounded-2xl bg-[#0F0F11] border border-red-500/30 p-6 shadow-[0_0_50px_rgba(239,68,68,0.25)] text-center relative overflow-hidden" id="purge-dialog-container">
+      
+      <div class="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto mb-4" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+
+      <h3 id="purge-modal-title" class="text-xl font-light text-white mb-2">Purge Workspace & End Session?</h3>
+      <p id="purge-modal-desc" class="text-xs text-gray-300 leading-relaxed mb-6">
+        This will immediately deallocate all in-memory vector embeddings, extracted document text, parsed PDF structures, and conversation history from your browser. <strong>This action cannot be undone.</strong>
+      </p>
+
+      <div class="flex items-center justify-center gap-3">
+        <button id="btn-cancel-purge" class="btn-secondary text-xs px-5 py-2" aria-label="Cancel purge and keep workspace">
+          Cancel
+        </button>
+        <button id="btn-confirm-purge" class="btn-danger text-xs px-5 py-2 font-semibold flex items-center gap-2" aria-label="Confirm and purge workspace memory">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          Yes, Purge Workspace
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Particle Purge Dispersal Overlay Canvas -->
+  <canvas id="purge-canvas" aria-hidden="true" class="hidden"></canvas>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none" aria-live="polite" role="status"></div>
+
+  <script src="workspace.js"></script>
+</body>
+</html>

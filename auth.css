@@ -1,0 +1,40 @@
+/* Auth-05 Custom Styling for Chodhyam */
+@layer utilities {
+  .auth-input {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .auth-input:focus {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: #14B8A6;
+    box-shadow: 0 0 0 1px #14B8A6, 0 0 20px rgba(20, 184, 166, 0.2);
+  }
+
+  .auth-tab {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .auth-tab.active {
+    background-color: #18181B;
+    color: #FFFFFF;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5), 0 0 12px rgba(20, 184, 166, 0.15);
+  }
+}
+
+/* Custom scrollbars for clean look */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3f3f46;
+}

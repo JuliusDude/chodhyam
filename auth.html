@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-black">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Authenticate — Chodhyam AI Document Engine</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14B8A6',
+            secondary: '#000000',
+            tertiary: '#0F5AC8',
+            surface: '#0A0A0C',
+            'surface-raised': '#121215',
+            'surface-border': 'rgba(255, 255, 255, 0.08)',
+            'text-primary': '#F1F5F9',
+            'text-secondary': '#94A3B8',
+            accent: '#14B8A6',
+          },
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+            serif: ['"Playfair Display"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Three.js for Background Art -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- GSAP for Smooth Transitions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body class="h-full bg-black text-slate-100 antialiased selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden">
+
+  <div class="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2 relative">
+    
+    <!-- LEFT PANEL: Minimal Hero Typography & Ambient Visuals -->
+    <div class="relative hidden lg:flex flex-col justify-center p-12 xl:p-16 bg-[#050507] border-r border-white/10 overflow-hidden">
+      <!-- Three.js Canvas Background -->
+      <canvas id="auth-field" class="absolute inset-0 w-full h-full pointer-events-none opacity-80"></canvas>
+      
+      <!-- Vertically Centered Golden-Ratio Composition (φ = 1.618) -->
+      <div class="relative z-10 max-w-xl my-auto">
+        <a href="index.html" class="inline-block text-white font-bold text-6xl xl:text-7xl tracking-tighter hover:text-teal-400 transition-colors mb-6 group">
+          Chodhyam<span class="text-teal-400">.</span>
+        </a>
+        <h2 class="text-3xl xl:text-4xl font-light text-gray-300 tracking-tight leading-[1.3]">
+          Privacy that exists <br/>
+          <span class="font-serif italic font-normal text-teal-300">by deliberate design.</span>
+        </h2>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Authentication Form Card (Watermelon auth-05 Component) -->
+    <div class="flex flex-col justify-between p-6 sm:p-10 lg:p-14 bg-black relative">
+      
+      <!-- Top Mobile Navbar / Header -->
+      <div class="flex items-center justify-between w-full max-w-md mx-auto">
+        <a href="index.html" class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back to Home</span>
+        </a>
+        <a href="workspace.html" class="text-xs font-mono text-teal-400 hover:underline">
+          Guest Sandbox →
+        </a>
+      </div>
+
+      <!-- Main Card Container -->
+      <div class="w-full max-w-md mx-auto my-auto py-8">
+        
+        <!-- Header -->
+        <div class="text-left mb-8">
+          <h1 id="auth-title" class="text-2xl sm:text-3xl font-semibold text-white tracking-tight mb-2">
+            Welcome to Chodhyam
+          </h1>
+          <p id="auth-subtitle" class="text-sm text-gray-400">
+            Sign in to access your secure ephemeral workspaces.
+          </p>
+        </div>
+
+        <!-- Auth Tabs (Sign In / Sign Up / Ephemeral Guest) -->
+        <div class="grid grid-cols-2 p-1 bg-white/[0.05] border border-white/10 rounded-xl mb-6" role="tablist">
+          <button id="tab-login" role="tab" aria-selected="true" class="auth-tab py-2.5 text-xs font-semibold rounded-lg text-white bg-[#18181b] shadow-sm transition-all">
+            Sign In
+          </button>
+          <button id="tab-signup" role="tab" aria-selected="false" class="auth-tab py-2.5 text-xs font-semibold rounded-lg text-gray-400 hover:text-white transition-all">
+            Create Account
+          </button>
+        </div>
+
+        <!-- Google Sign-In Button -->
+        <button type="button" id="btn-google" class="w-full py-2.5 px-4 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 text-white text-sm font-medium transition-all flex items-center justify-center gap-3 shadow-sm hover:border-white/20 active:scale-[0.99]">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+          </svg>
+          <span id="google-btn-text">Sign in with Google</span>
+        </button>
+
+        <!-- Divider with Text -->
+        <div class="relative flex items-center justify-center my-6">
+          <div class="border-t border-white/10 w-full"></div>
+          <span class="bg-black px-3 text-[11px] uppercase tracking-wider font-mono text-gray-500 shrink-0">Or continue with email</span>
+          <div class="border-t border-white/10 w-full"></div>
+        </div>
+
+        <!-- Form Elements -->
+        <form id="auth-form" class="space-y-4" novalidate>
+          
+          <!-- Full Name Field (Sign Up Only) -->
+          <div id="field-name-group" class="hidden space-y-1.5 text-left">
+            <label for="input-name" class="block text-xs font-medium text-gray-300">Full Name</label>
+            <div class="relative">
+              <input type="text" id="input-name" placeholder="Julius Caesar" class="auth-input w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all">
+            </div>
+          </div>
+
+          <!-- Email Field -->
+          <div class="space-y-1.5 text-left">
+            <label for="input-email" class="block text-xs font-medium text-gray-300">Email address</label>
+            <div class="relative">
+              <input type="email" id="input-email" required placeholder="name@company.com" class="auth-input w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </div>
+            </div>
+            <p id="email-error" class="hidden text-xs text-rose-400 mt-1"></p>
+          </div>
+
+          <!-- Password Field -->
+          <div class="space-y-1.5 text-left">
+            <div class="flex items-center justify-between">
+              <label for="input-password" class="block text-xs font-medium text-gray-300">Password</label>
+              <a href="#" id="link-forgot-pass" class="text-xs text-teal-400 hover:text-teal-300 transition-colors">Forgot password?</a>
+            </div>
+            <div class="relative">
+              <input type="password" id="input-password" required placeholder="••••••••••••" class="auth-input w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all">
+              <button type="button" id="btn-toggle-password" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-white" aria-label="Toggle password visibility">
+                <svg id="icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <p id="password-error" class="hidden text-xs text-rose-400 mt-1"></p>
+          </div>
+
+          <!-- Password confirmation (Sign Up Only) -->
+          <div id="field-confirm-group" class="hidden space-y-1.5 text-left">
+            <label for="input-confirm" class="block text-xs font-medium text-gray-300">Confirm Password</label>
+            <input type="password" id="input-confirm" placeholder="••••••••••••" class="auth-input w-full px-4 py-2.5 rounded-xl bg-white/[0.04] border border-white/10 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500 transition-all">
+            <p id="confirm-error" class="hidden text-xs text-rose-400 mt-1"></p>
+          </div>
+
+          <!-- Ephemeral Session Security Checkbox -->
+          <div class="flex items-start gap-2.5 pt-2 text-left">
+            <input type="checkbox" id="check-ephemeral" checked class="mt-0.5 w-4 h-4 rounded bg-zinc-900 border-white/20 text-teal-500 focus:ring-teal-500 focus:ring-offset-0">
+            <label for="check-ephemeral" class="text-xs text-gray-400 cursor-pointer">
+              Enforce ephemeral security mode (destroy active memory vectors on browser tab close).
+            </label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="btn-submit" class="w-full mt-4 py-3 px-4 rounded-xl bg-teal-500 hover:bg-teal-400 text-black font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(20,184,166,0.25)] hover:shadow-[0_0_32px_rgba(20,184,166,0.4)] active:scale-[0.99]">
+            <span id="btn-submit-text">Sign In to Workspace</span>
+            <svg id="btn-submit-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <div id="btn-submit-spinner" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+          </button>
+
+        </form>
+
+        <!-- Status / Toast Banner -->
+        <div id="auth-alert" class="hidden mt-4 p-3 rounded-xl text-xs font-mono text-center border"></div>
+
+      </div>
+
+      <!-- Bottom Disclaimer -->
+      <div class="w-full max-w-md mx-auto text-center text-xs text-gray-600">
+        By continuing, you agree to Chodhyam's <a href="docs/PRODUCT.md" class="underline hover:text-gray-400">Zero-Data Policy</a> and <a href="docs/DESIGN.md" class="underline hover:text-gray-400">Terms of Privacy</a>.
+      </div>
+
+    </div>
+
+  </div>
+
+  <script src="auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-black">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Not Found — Chodhyam</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#14B8A6',
+            secondary: '#000000',
+            tertiary: '#0F5AC8',
+            surface: '#0A0A0C',
+            'surface-raised': '#121215',
+            'surface-border': 'rgba(255, 255, 255, 0.08)',
+            'text-primary': '#F1F5F9',
+            'text-secondary': '#94A3B8',
+            accent: '#14B8A6',
+          },
+          fontFamily: {
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Three.js for Subtle Particle Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- GSAP for Smooth Transitions -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body class="min-h-screen bg-black text-slate-100 antialiased flex flex-col justify-between selection:bg-teal-500/30 selection:text-teal-200 overflow-x-hidden relative">
+
+  <!-- Subtle WebGL Ambient Particle Field -->
+  <canvas id="error-field" class="absolute inset-0 w-full h-full pointer-events-none opacity-50 z-0"></canvas>
+
+  <!-- Top Navbar -->
+  <header class="relative z-10 h-16 px-6 sm:px-12 flex items-center justify-between">
+    <a href="index.html" class="text-white font-semibold text-xl tracking-tight hover:text-teal-400 transition-colors">
+      Chodhyam
+    </a>
+  </header>
+
+  <!-- Main Error Message Area -->
+  <main class="relative z-10 flex-grow flex items-center justify-center px-6 py-12">
+    <div class="w-full max-w-lg text-center space-y-6">
+      
+      <!-- HTTP Status Code -->
+      <h1 id="error-code-display" class="text-8xl sm:text-9xl font-light tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-600 font-mono select-none">
+        404
+      </h1>
+
+      <!-- Error Title -->
+      <h2 id="error-title-display" class="text-2xl sm:text-3xl font-semibold text-white tracking-tight">
+        Page Not Found
+      </h2>
+
+      <!-- Error Description -->
+      <p id="error-desc-display" class="text-gray-400 text-sm sm:text-base leading-relaxed max-w-md mx-auto">
+        The page or ephemeral session you are looking for does not exist or has expired.
+      </p>
+
+      <!-- Single Primary Action Button Redirecting to Main Page -->
+      <div class="pt-4">
+        <a href="index.html" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-black text-sm font-semibold tracking-tight transition-all duration-200 shadow-[0_0_24px_rgba(20,184,166,0.25)] hover:shadow-[0_0_32px_rgba(20,184,166,0.4)] active:scale-[0.98]">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>Back to Main Page</span>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 h-14 px-6 sm:px-12 flex items-center justify-center text-xs text-gray-600 font-mono">
+    <span>Chodhyam — Ephemeral Document Intelligence</span>
+  </footer>
+
+  <script src="error.js"></script>
+</body>
+</html>
