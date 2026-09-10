@@ -1,15 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import List
 
-from app.adapters.inference.mock_slm_adapter import MockSLMAdapter
-from app.adapters.vector.mock_vector_adapter import MockVectorAdapter
+from app.api.dependencies import get_inference_service, get_vector_service
 
 router = APIRouter()
-
-# Instantiate adapters (Dependency injection is preferred for production)
-inference_service = MockSLMAdapter()
-vector_service = MockVectorAdapter()
 
 class ChatRequest(BaseModel):
     session_id: str
@@ -21,7 +16,11 @@ class ChatResponse(BaseModel):
     latency_ms: int
 
 @router.post("/query", response_model=ChatResponse)
-async def query_chat(request: ChatRequest):
+async def query_chat(
+    request: ChatRequest,
+    inference_service = Depends(get_inference_service),
+    vector_service = Depends(get_vector_service)
+):
     # 1. Retrieve relevant context from vector store for this session
     relevant_chunks = await vector_service.search(
         session_id=request.session_id,
